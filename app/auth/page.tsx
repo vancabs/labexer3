@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState } from 'react'
 import { getSupabaseClient } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 
@@ -14,8 +14,6 @@ export default function AuthPage() {
   const [loading, setLoading] = useState(false)
   const router = useRouter()
 
-  const supabase = useMemo(() => getSupabaseClient(), [])
-
   const clearMessages = () => {
     setMessage('')
     setError('')
@@ -24,6 +22,13 @@ export default function AuthPage() {
   const handleSignUp = async () => {
     clearMessages()
     setLoading(true)
+
+    const supabase = getSupabaseClient()
+    if (!supabase) {
+      setError('Unable to initialize Supabase client.')
+      setLoading(false)
+      return
+    }
 
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -44,6 +49,13 @@ export default function AuthPage() {
   const handleLogin = async () => {
     clearMessages()
     setLoading(true)
+
+    const supabase = getSupabaseClient()
+    if (!supabase) {
+      setError('Unable to initialize Supabase client.')
+      setLoading(false)
+      return
+    }
 
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
