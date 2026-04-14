@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { supabase } from '@/lib/supabase'
+import { useState, useMemo } from 'react'
+import { getSupabaseClient } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 
 export const dynamic = 'force-dynamic'
@@ -13,6 +13,8 @@ export default function AuthPage() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const router = useRouter()
+
+  const supabase = useMemo(() => getSupabaseClient(), [])
 
   const clearMessages = () => {
     setMessage('')
