@@ -23,26 +23,31 @@ export default function AuthPage() {
     clearMessages()
     setLoading(true)
 
-    const supabase = getSupabaseClient()
-    if (!supabase) {
-      setError('Unable to initialize Supabase client.')
+    try {
+      const supabase = getSupabaseClient()
+      if (!supabase) {
+        setError('Unable to initialize Supabase client.')
+        setLoading(false)
+        return
+      }
+
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+      })
+
+      if (error) {
+        setError(error.message)
+      } else {
+        setMessage('Sign up successful! Please check your email to confirm your account.')
+        setEmail('')
+        setPassword('')
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred'
+      setError(errorMessage)
+    } finally {
       setLoading(false)
-      return
-    }
-
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-    })
-
-    setLoading(false)
-
-    if (error) {
-      setError(error.message)
-    } else {
-      setMessage('Sign up successful! Please check your email to confirm your account.')
-      setEmail('')
-      setPassword('')
     }
   }
 
@@ -50,27 +55,32 @@ export default function AuthPage() {
     clearMessages()
     setLoading(true)
 
-    const supabase = getSupabaseClient()
-    if (!supabase) {
-      setError('Unable to initialize Supabase client.')
+    try {
+      const supabase = getSupabaseClient()
+      if (!supabase) {
+        setError('Unable to initialize Supabase client.')
+        setLoading(false)
+        return
+      }
+
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+
+      if (error) {
+        setError(error.message)
+      } else {
+        setMessage('Login successful! Redirecting...')
+        setTimeout(() => {
+          router.push('/profile')
+        }, 1500)
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred during login'
+      setError(errorMessage)
+    } finally {
       setLoading(false)
-      return
-    }
-
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
-
-    setLoading(false)
-
-    if (error) {
-      setError(error.message)
-    } else {
-      setMessage('Login successful! Redirecting...')
-      setTimeout(() => {
-        router.push('/profile')
-      }, 1500)
     }
   }
 

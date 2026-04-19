@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { getSupabaseClient } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { useCallback } from 'react'
 
 interface Article {
   id: number
@@ -49,6 +50,7 @@ export default function ArticlesPage() {
   const [articles, setArticles] = useState<Article[]>(initialArticles)
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [copiedId, setCopiedId] = useState<number | null>(null)
   const router = useRouter()
 
   useEffect(() => {
@@ -91,6 +93,27 @@ export default function ArticlesPage() {
     ))
   }
 
+  const handleShare = useCallback((articleId: number, articleTitle: string) => {
+    const url = `${window.location.origin}/articles?article=${articleId}`
+    navigator.clipboard.writeText(url).then(() => {
+      setCopiedId(articleId)
+      setTimeout(() => setCopiedId(null), 2000)
+    }).catch((err) => {
+      console.error('Failed to copy link:', err)
+    })
+  }, [])
+
+  const handleLogout = async () => {
+    const supabase = getSupabaseClient()
+    if (!supabase) {
+      router.push('/auth')
+      return
+    }
+    
+    await supabase.auth.signOut()
+    router.push('/auth')
+  }
+
   const addComment = (id: number, comment: string) => {
     if (comment.trim()) {
       setArticles(articles.map(article =>
@@ -101,20 +124,12 @@ export default function ArticlesPage() {
     }
   }
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-gray-600">Loading...</div>
-      </div>
-    )
-  }
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
       {/* Navigation */}
       <nav className="bg-white shadow-lg border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
+          <div className="flex justify-between h-16 items-center">
             <div className="flex space-x-8">
               <Link
                 href="/profile"
@@ -129,6 +144,15 @@ export default function ArticlesPage() {
                 Articles
               </Link>
             </div>
+            <button
+              onClick={handleLogout}
+              className="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-colors duration-200 shadow-md hover:shadow-lg"
+            >
+              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+              Logout
+            </button>
           </div>
         </div>
       </nav>
@@ -173,6 +197,20 @@ export default function ArticlesPage() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                     </svg>
                     Comments ({article.comments.length})
+                  </button>
+
+                  <button
+                    onClick={() => handleShare(article.id, article.title)}
+                    className={`inline-flex items-center px-6 py-3 border-2 rounded-lg text-sm font-semibold transition-all duration-200 ${
+                      copiedId === article.id
+                        ? 'bg-green-100 text-green-700 border-green-300'
+                        : 'bg-purple-100 text-purple-700 border-purple-300 hover:bg-purple-200'
+                    }`}
+                  >
+                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={copiedId === article.id ? "M5 13l4 4L19 7" : "M8.684 13.342C9.589 12.113 10.424 11.854 11.192 11.854c2.26 0 2.889 1.692 4.156 4.015.173.36.36.748.568 1.154 2.456 4.537 2.989 5.144 3.58 5.144 1.867 0 2.857-1.368 2.857-3.77v-.734c0-1.79-.424-2.889-.867-3.687-.738-1.265-1.741-1.957-3.063-1.957-1.707 0-3.185 1.384-3.624 2.701-.41.317-.828.537-1.215.537-.833 0-1.592-.624-2.053-1.73-.34-.766-.656-1.545-.996-2.493C14.981 3.506 13.72 1 10.633 1 7.539 1 5.849 2.95 5.13 5.456c-.33.99-.509 2.208-.882 3.996m0 0v1.89"} />
+                    </svg>
+                    {copiedId === article.id ? 'Copied!' : 'Share'}
                   </button>
                 </div>
               </div>
