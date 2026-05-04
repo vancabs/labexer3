@@ -67,7 +67,7 @@ export default function AdminPage() {
                 href="/admin"
                 className="inline-flex items-center px-1 pt-1 border-b-2 border-red-500 text-sm font-medium text-gray-900"
               >
-                Dashboard
+                Profile
               </Link>
               <Link
                 href="/admin/manage-articles"
